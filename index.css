@@ -1,0 +1,37 @@
+@import "tailwindcss";
+
+body {
+    background-color: #050505;
+    color: #f0f0f0;
+    font-family: 'Inter', sans-serif;
+}
+.font-orbitron {
+    font-family: 'Orbitron', sans-serif;
+}
+.psychedelic-gradient {
+    background: linear-gradient(45deg, #ff00ff, #00ffff, #ff0000, #ffff00, #00ff00);
+    background-size: 400% 400%;
+    animation: gradient-flow 15s ease infinite;
+}
+@keyframes gradient-flow {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+.glow-border:focus {
+    box-shadow: 0 0 15px rgba(168, 85, 247, 0.5);
+    border-color: rgba(168, 85, 247, 0.8);
+}
+::-webkit-scrollbar {
+    width: 8px;
+}
+::-webkit-scrollbar-track {
+    background: #111;
+}
+::-webkit-scrollbar-thumb {
+    background: #333;
+    border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #444;
+}

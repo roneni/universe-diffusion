@@ -1,0 +1,7 @@
+{
+  "name": "Visionary Studio",
+  "description": "A high-end generative art platform powered by Nano Banana 2 for creating and editing breathtaking, hyper-detailed masterpieces across diverse artistic styles.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}

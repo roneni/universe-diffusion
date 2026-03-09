@@ -164,6 +164,7 @@ export default function App() {
   const [copyStatus, setCopyStatus] = useState<string>("Copy Blueprint Prompt");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const analyzerInputRef = useRef<HTMLInputElement>(null);
+  const generatorInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const checkAuthStatus = async () => {
@@ -322,6 +323,64 @@ export default function App() {
     }
   };
 
+  const handleGeneratorUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const b64 = event.target?.result as string;
+      setEditingImage({
+        id: Date.now().toString(),
+        url: b64,
+        prompt: "Uploaded Image",
+        model: ModelType.FLASH,
+        timestamp: Date.now()
+      });
+      setEditPrompt("");
+    };
+    try {
+      reader.readAsDataURL(file);
+    } catch (e) {
+      console.error("Failed to read file:", e);
+    }
+  };
+
+  const handleRemoveText = async () => {
+    if (!editingImage) return;
+    if (!isProConnected) {
+      try {
+        await handleConnectPro();
+      } catch (e) {
+        console.error("Failed to connect Pro:", e);
+        return;
+      }
+    }
+    setIsGenerating(true);
+    setLoadingMsg("Removing Text & Logos...");
+    try {
+      const removeTextPrompt = "Remove all text, writing, and typography from the image. Fill in the background seamlessly.";
+      const url = await editUniverseImage(editingImage.url, removeTextPrompt, model, resolution.value);
+
+      const newImage: GeneratedImage = {
+        id: Date.now().toString(),
+        url,
+        prompt: `Text Removal: ${removeTextPrompt}`,
+        model,
+        timestamp: Date.now()
+      };
+
+      setGallery(prev => [newImage, ...prev]);
+      setEditingImage(null);
+      setEditPrompt("");
+    } catch (error: any) {
+      console.error("Text removal failed:", error);
+      alert(`Text removal failed: ${error.message}`);
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
   const handleAnalyzeUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -458,14 +517,21 @@ export default function App() {
                           className="w-full bg-black/50 border border-purple-500/30 rounded-lg p-2 text-sm focus:outline-none focus:border-purple-400"
                           placeholder="What should change?"
                         />
-                        <div className="flex gap-2 mt-3">
-                          <button 
+                        <div className="flex flex-wrap gap-2 mt-3">
+                          <button
                             onClick={handleEdit}
                             className="px-4 py-1.5 bg-purple-500 hover:bg-purple-400 text-white rounded text-[10px] font-bold uppercase tracking-widest transition-colors"
                           >
                             Apply
                           </button>
-                          <button 
+                          <button
+                            onClick={handleRemoveText}
+                            className="px-4 py-1.5 bg-cyan-600 hover:bg-cyan-500 text-white rounded text-[10px] font-bold uppercase tracking-widest transition-colors flex items-center gap-1"
+                          >
+                            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                            Remove Text
+                          </button>
+                          <button
                             onClick={() => { setEditingImage(null); setEditPrompt(""); }}
                             className="px-4 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-white rounded text-[10px] font-bold uppercase tracking-widest transition-colors"
                           >
@@ -601,13 +667,29 @@ export default function App() {
                     </div>
                   </div>
 
-                  <button 
-                    onClick={handleGenerate}
-                    disabled={isGenerating || !prompt}
-                    className="w-full py-4 bg-white text-black hover:bg-cyan-400 hover:text-black rounded-xl text-xs font-bold uppercase tracking-widest transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed mt-4"
-                  >
-                    Generate Image
-                  </button>
+                  <div className="flex gap-2 mt-4">
+                    <button
+                      onClick={handleGenerate}
+                      disabled={isGenerating || !prompt}
+                      className="flex-1 py-4 bg-white text-black hover:bg-cyan-400 hover:text-black rounded-xl text-xs font-bold uppercase tracking-widest transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Generate Image
+                    </button>
+                    <button
+                      onClick={() => generatorInputRef.current?.click()}
+                      className="px-6 py-4 bg-zinc-800 text-white hover:bg-zinc-700 rounded-xl text-xs font-bold uppercase tracking-widest transition-all active:scale-95 flex items-center gap-2"
+                    >
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
+                      Upload
+                    </button>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      ref={generatorInputRef}
+                      onChange={handleGeneratorUpload}
+                    />
+                  </div>
                 </div>
               </div>
             </div>
